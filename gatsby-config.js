@@ -8,7 +8,14 @@ module.exports = {
     // You can overwrite values here that are used for the SEO component
     // You can also add new values here to query them like usual
     // See all options: https://github.com/LekoArts/gatsby-themes/blob/master/themes/gatsby-theme-minimal-blog/gatsby-config.js
-    siteTitleAlt: `Minimal Blog - Gatsby Theme`,
+    siteTitle: `Rici's Coding Soup. 🍜`,
+    siteTitleAlt: `Rici's Coding Soup (mostly about Mobile Engineering)`,
+    siteHeadline: `Felipe R. - Mobile Engineering 📱`,
+    siteDescription: `Born & raised in Brazil. World Citizen. Currently in London, UK. This is Rici's Coding Soup.`,
+    siteLanguage: `en`,
+    siteUrl: `https://codes.ricieri.me`,
+    siteImage: `https://www.passaro.org/wp-content/uploads/2018/10/Arara-Azul-Reprodu%C3%A7%C3%A3o.jpg`,
+    author: `@felipericieri`,
   },
   plugins: [
     {
@@ -17,22 +24,22 @@ module.exports = {
       options: {
         navigation: [
           {
-            title: `Blog`,
-            slug: `/blog`,
-          },
-          {
-            title: `About`,
-            slug: `/about`,
+            title: `Hello, stranger.`,
+            slug: `/hello`,
           },
         ],
         externalLinks: [
           {
             name: `Twitter`,
-            url: `https://twitter.com/lekoarts_de`,
+            url: `https://twitter.com/felipericieri`,
           },
           {
-            name: `Homepage`,
-            url: `https://www.lekoarts.de?utm_source=minimal-blog&utm_medium=Starter`,
+            name: `Linkedin`,
+            url: `https://www.linkedin.com/in/felipericieri/`,
+          },
+          {
+            name: `Medium`,
+            url: `https://medium.com/@felipericieri`,
           },
         ],
       },
@@ -132,7 +139,7 @@ module.exports = {
               }
             `,
             output: `rss.xml`,
-            title: `Minimal Blog - @lekoarts/gatsby-theme-minimal-blog`,
+            title: `Felipe Ricieri - Senior Mobile Engineer`,
           },
         ],
       },

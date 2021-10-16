@@ -9,7 +9,7 @@ module.exports = {
     // You can also add new values here to query them like usual
     // See all options: https://github.com/LekoArts/gatsby-themes/blob/master/themes/gatsby-theme-minimal-blog/gatsby-config.js
     siteTitle: `Rici's Coding Soup. 🍜`,
-    siteTitleAlt: `Rici's Coding Soup (mostly about Mobile Engineering)`,
+    siteTitleAlt: `Rici's Coding Soup (mostly Mobile Engineering)`,
     siteHeadline: `Felipe R. - Mobile Engineering 📱`,
     siteDescription: `Born & raised in Brazil. World Citizen. Currently in London, UK. This is Rici's Coding Soup.`,
     siteLanguage: `en`,

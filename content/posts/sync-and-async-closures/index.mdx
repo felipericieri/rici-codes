@@ -1,0 +1,149 @@
+---
+title: "Sync & Async Closures"
+date: 2021-10-22
+slug: "/sync-and-async-closures"
+---
+
+> The opposite of love is not hate, it's indifference. The opposite of art is not ugliness, it's indifference. The opposite of faith is not heresy, it's indifference. And the opposite of life is not death, it's indifference.
+- _Elie Wiesel (1928-2016), Romanian-born American writer_.
+
+***
+
+One thing I've noticed people don't get right when they start in software development is the concept of synchronous & asynchronous operations.
+
+That's totally fine, neither did I, back in the day. In fact, I needed to stop for a day to go deep on it so I can have the right picture. It's ironic, such a simple concept yet so hard to grasp.
+
+I'll start with what the docs say:
+
+### Synchronous Processes
+> (Process) Synchronization refers to the idea that multiple processes are to join up or handshake at a certain point, in order to reach an agreement or commit to a certain sequence of action.
+
+> (Thread) Synchronization is defined as a mechanism which ensures that two or more concurrent processes or threads do not simultaneously execute some particular program segment known as *critical section*.
+
+There was a time where machines are very limitated and could just run one task at time. Nowadays we have rocket power computation in our hands. Your phone is capable to process way more information than it used to have. This happens because the industry increasing the CPU power in mobile devices over time (more cores, better architecture, etc).
+
+But even with all this power, there are tasks that still need to happen in a _synchronised_ fashion. That's where the [Grand Central Dispatch](https://developer.apple.com/documentation/DISPATCH) starts to get complicated. Although you can dispatch tasks to happen at the same time, there will be a point in time they have to convey on the resource access. As in, which thread will touch the data first.
+
+This is a hot topic in computer science and we can keep discussing it for days. So coming back to the point, the bottomline is - synchronisation (in this context) is about **one thing happening (or being executed) once at time, after the previous one and before the next one**.
+
+The catch is - when a synchronous task is dispatched, it also means this task will be executed **now**, **at the same time the task was dispatched*, and *will wait for the task to be completed to progress to the next task**. (bear this in mind to the next section).
+
+### Asynchronous Processes
+> \[...\] Asynchronous describes the relationship between two or more events/objects that do interact within the same system _**but do not occur at predetermined intervals**_ and _**do not necessarily rely on each other's existence to function**_. They are not coordinated with each other, meaning they could occur simultaneously or not because they have their own separate agenda.
+
+There's a misleading understanding about the opposite of synchronization. We seem to believe that the opposite of doing one thing is doing several, at time.
+
+That's what **Concurrent Process** means, in fact. Asynchronous operations don't necessarily happen at the same time. You can have a serial queue, processing tasks asynchronously.
+
+What performing a task asynchronously essentially means is that this task will be executed _**later**_, as in _**not at the same time it was dispatched**_, and the control will be returned to the system so the next task can be executed. 
+
+In other words, it will compute that you want to perform this task, but it will do later and not block the thread to the other tasks that are about to come.
+
+This is a powerful feature for "non-blocking" systems, such as web frameworks (Nodejs, Swift NIO, etc). Where everything is a "Promise", nothing is being executed now, but later.
+
+So when does later occures? Well, you define. It depends to where you're sending this operation to be executed. In iOS, what the system does is to send this taks to the end of the queue. So if you have 10 tasks to execute in a serial queue and the 5th is asynchronous (dispatched in the same queue), it will be pushed to be executed after the so defined 10th task.
+
+### Closures
+
+Great! Now that we're in the same page let's talk about closures. Can you tell which one below is synchronous and which one is asynchronous?
+
+```swift
+func doThis(_ closure: () -> Void) {
+  // ...
+}
+
+func doThat(_ closure: @escaping () -> Void) {
+  // ...
+}
+```
+
+If you've guessed that `doThis(_:)` is synchronous, you're absolutely right. If you've guessed that `doThat(_:)` can be both synchronous and asynchronous, you've nailed it! 
+
+Wait, wat?
+
+An escaping closure does not mean a closure _will_ perform an asynchronous operation. It just enable the closure to do so. But you still can have synchronous tasks running in it. It depends of your implementation. An escaping closure just means that the work will _escape_ its context, or simply can not be consumed within the block.
+
+This is evident when you're working with Dependency Injection and you have a default implementation for you app, but mocks for your tests. _**Just because you have a escaping closure, it doesn't mean you need to wait expectations to assert what happens within it**_.
+
+### Example
+
+Below we have an example to demonstrate how this happens.
+
+```swift
+// Api Declaration
+protocol Api: AnyClass {
+  func callEndpoing(performTaskWhenApiResponds: @escaping (MyApiResult) -> Void)
+}
+
+// Default Async Api used in the App
+final class DefaultAsyncApi: Api {
+  func callEndpoing(performTaskWhenApiResponds: @escaping (MyApiResult) -> Void) {
+    // Dispatching to another queue, asynchronously
+    DispatchQueue.global(qos: .background).async { [self] in
+      // ... calls network
+    }
+  }
+}
+
+// Our Awesome Api Service
+final class MyAwesomeApiService {
+  private let api: Api
+  init(api: Api) {
+    self.api = api
+  }
+
+  func callEndpoint(_ closure: @escaping (MyApiResult) -> Void) {
+    api.callEndpoing(performTaskWhenApiResponds: closure)
+  }
+}
+
+// ..... TESTING TIME .....
+
+// Mock Api
+final class MockApi: Api {
+  var callEndpointIsCalled = false
+  func callEndpoing(performTaskWhenApiResponds: @escaping (MyApiResult) -> Void) {
+    callEndpointIsCalled = true
+    performTaskWhenApiResponds(/* Api result here */)
+  }
+}
+
+// ... somewhere in (probably) MyAwesomeApiServiceTests.swift
+
+// Testing it with a asynchronous implementation (bad code, don't do that)
+func test_callEndpoint_runsApiCallEndpoint_async() {
+  // Expectation
+  let expects = expectation("Expects callEndpoint(_:) closure to run") // this test NEEDS an expectation, as it runs an asynchronous task
+  // Given
+  let api = DefaultAsyncApi() // using the same object that the app uses
+  let apiService = MyAwesomeApiService(api: api)
+  // When
+  apiService.callEndpoint { result in
+    // Then
+    XCTAssertEqual(result, /* expected result here */) // This line will run asynchronously
+    expects.fulfill()
+  }
+  // Wait
+  wait(for: [expects], time: 0.1)
+}
+
+// Testing it with a synchronous implementation
+func test_callEndpoint_runsApiCallEndpoint_sync() {
+  // Given
+  let mockApi = MockApi() // we have total control over this object
+  let apiService = MyAwesomeApiService(api: mockApi)
+  // When
+  apiService.callEndpoint { result in
+    // Then
+    XCTAssertEqual(result, /* expected result here */) // This line will run synchronously
+  }
+}
+```
+
+`MyAwesomeApiService` takes an object of type `Api` and consumes it as a dependency, to forward the call we've asked it to perform to the network. The async operation lives in the `DefaultAsyncApi` implementation, but not in `MyAwesomeApiService`. That means, unless demmanded otherwise, `callEndpoint(_:)` will run synchronously.
+
+
+### References
+[Synchronization in Computer Science](https://en.wikipedia.org/wiki/Synchronization_(computer_science))
+
+[Definition of Asynchronous](https://www.techtarget.com/searchnetworking/definition/asynchronous)

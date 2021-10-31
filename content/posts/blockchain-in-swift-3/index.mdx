@@ -1,0 +1,182 @@
+---
+title: "Building a Blockchain in Swift (Part. 3)"
+date: 2021-10-31
+slug: "/building-a-blockchain-in-swift-part3"
+---
+
+### Before you dive in
+
+This article is part of a serie of Building a Blockchain in Swift. You can find [here](/building-a-blockchain-in-swift-part1) the Part. 1 and [here](/building-a-blockchain-in-swift-part2) the Part. 2.
+
+### Mining ⛏
+
+Now that we have our blockchain settled and we know how the blocks and transactions work, let's take a look in the mining mechanism. 
+
+```swift
+final class MiningService {
+  
+  /// 1. How many zeroes we'll need to regard so the hash can be accepted
+  private var blockchainDifficulty: String
+  
+  // MARK: - Initialiser
+  
+  init(difficulty: String) {
+    blockchainDifficulty = difficulty
+  }
+  
+  // MARK: - Service features
+  
+  /// 2. Mines a the next block in the blockchain
+  func mineBlock(previousBlock: Block, transactions: [Transaction]) -> Block {
+    let nextIndex = previousBlock.index + 1
+    print("⛏ Start mining block at height \(nextIndex)...")
+    // 3. 
+    let block = Block(index: nextIndex, previousHash: previousBlock.hash)
+    transactions.forEach { block.add(transaction: $0) }
+    
+    // 4.
+    let hash = generateHash(for: block)
+    block.hash = hash
+    
+    return block
+  }
+  
+  /// 5. Generate Hash for Block according to the difficulty of this blockchain
+  func generateHash(for block: Block) -> String {
+    print("🔑 Finding the hash for block at height \(block.index)...")
+    var hash = block.key.toSHA1()
+    
+    // 6. Search for a hash prefix according to the Blockchain difficulty
+    while !hash.hasPrefix(blockchainDifficulty) {
+      block.nonce += 1
+      hash = block.key.toSHA1()
+      print(hash)
+    }
+
+    print("🙌 Hash found! - \(hash)")
+    return hash
+  }
+}
+```
+
+Wow, hold on! We have too much going on there. Let's break it down:
+1. We create the service defining the blockchain difficulty we'll be working on. This is the amount of zeroes we'll need to find in a hash prefix so it can be accepted by the blockchain.
+2. We set a `mineBlock` method, that will take the previous block and the transactions that we want to register, then return the fresh new block.
+3. We start we an instance of the next block, and then add the transactions to the block.
+4. Then we need to generate the hash for this block. This will require some work from the node. Once it's down, we return the block.
+5. The way we find the hash for the block is first to execute our SHA-1 function in the block key; and
+6. Loop in to the hash value, incrementing the nonce, until we find a nonce that gives us a hash which is prefixed with the amount of zeroes the blockchain requires.
+
+_P.S.: In this implementation I'm using a custom SHA-1 method which you can find it [here](https://gist.github.com/felipericieri/c296fa28198b8671a927ec550a522e53)_
+
+#### The mining algorithm
+
+As you can see, the way we go to find another hash is to increment our `nonce` value. This is exactly the purpose we have it there. Is just a random number that helps us to find a hash that solves the blockchain's mathematical problem. We can't really change any other value in the block, it should stay as it is.
+
+This is a very simple way to implement the Proof-of-Work protocol, but not so efficient. You see, you don't have any guarantee that the `nonce` you're using next is the right one, so there's no other way apart from trial-and-error to find this value. Feel free to explore other ways to implement yours! 
+
+The beauty behind this is that adds entropy to this problem. It's a fair play for all nodes in the network. Whichever finds the hash first, can mine the block.
+
+### Putting all pieces together
+
+Now we have enough to try to create our own blockchain. This is how we can use it:
+
+```swift
+// Exercise1.swift
+
+// Creates the Mining Service
+let miningService = MiningService(difficulty: "00") // starting with just 2 zeroes
+// Generates Genesis Block
+let genesisBlock = Block(index: 0, previousHash: "0000000000000000000000000000000000000000") // 40 zeroes
+// Tries to find the hash for the genesis block
+genesisBlock.hash = miningService.generateHash(for: genesisBlock)
+// Once it finds the hash, create the Blockchain
+let blockchain = Blockchain(genesisBlock: genesisBlock)
+print("Blockchain is ready! 🎉")
+```
+
+If you execute the code above (you can use a Swift Playground for it), you should get some output similar to this one in your console:
+
+```
+🔑 Finding the hash for block at height 0...
+1ca360046cde59c93cdae5ec5a1a2dc7495d4a58
+e42d0bbf1e810538cbdce382c040b599a2ddadee
+d4d96b51564127ae292448f75603f347c5b68947
+7bac36206d7c747879f765547e7b2a2f35dc5094
+....
+5ac1df0c735ff12ca81623d5bca5da56553061b6
+556a5a8ba5b8ec0167b35d782f10a22a1d997661
+d0e0a2882b36b08196a0cc291532d8f213898b78
+006809c305f6f9790890e6d7c7319817f15fcee0
+🙌 Hash found! - 006809c305f6f9790890e6d7c7319817f15fcee0
+Blockchain is ready! 🎉
+```
+
+> My machine needed to run the function 218x to be able to find a hash for the genesis block! Picture how many time would be consumed to find a block with today's difficulty! 😬
+
+### Adding Transactions
+
+Now you have a blockchain you can push transactions to! Let's try to transfer some value to people:
+
+```swift
+// Assumes the Exercise1.swift preceds
+
+// Creates a new block
+let transaction = Transaction(from: "Felipe", to: "Tim Cook", amount: 100)
+let newBlock = miningService.mineBlock(previousBlock: genesisBlock, transactions: [transaction])
+blockchain.add(block: newBlock)
+```
+
+In your console, you should get something like this:
+
+```
+⛏ Start mining block at height 1...
+🔑 Finding the hash for block at height 1...
+d38bb30cbf0fbc474a46b2d77cc75150ab8a971d
+9abc08b38a3614345eeec23cdfed8fce3b78aa54
+884ff549811fb2e67664b9c09003436d459b3d0c
+...
+06cc51dc417c8fd9df0202f0ebd4a4996ffb9954
+2d393c75dcb0e9f59e123696b1a19634991de156
+00e97b38c191495227b6d3cb5fdaad175f947e21
+🙌 Hash found! - 00e97b38c191495227b6d3cb5fdaad175f947e21
+```
+
+> This time the function was ran 525 times! 😱
+
+And that's how your blockchain should look like when printed as a JSON object:
+
+```json
+{
+  "blocks": [
+    {
+      "nonce": 218,
+      "previousHash": "0000000000000000000000000000000000000000",
+      "hash": "006809c305f6f9790890e6d7c7319817f15fcee0",
+      "transactions": [],
+      "index": 0
+    },
+    {
+      "nonce": 525,
+      "previousHash": "006809c305f6f9790890e6d7c7319817f15fcee0",
+      "hash": "00e97b38c191495227b6d3cb5fdaad175f947e21",
+      "transactions": [
+        {
+          "to": "Tim Cook",
+          "amount": 100,
+          "from": "Felipe"
+        }
+      ],
+      "index": 1
+    }
+  ]
+}
+```
+
+### Wrapping up
+
+Woohoo! We've just written our first Blockchain in Swift, using Proof-of-Work! As I've mentioned, we aren't using the most effective algorithm to find the hash in the market, but that's a great start. That's also not the only protocol out there, most advanced blockchains uses protocols such as **Proof-of-Stake**, **Proof-of-Authority**, **Proof-of-Space**, and many others. 
+
+Hope you had as much fun as I had writing this. Thanks for reading! If you have any suggestions or questions, please hit me in [twitter](https://twitter.com/ricicodes)!
+
+_Valeu_! ✌️

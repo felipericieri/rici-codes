@@ -1,0 +1,47 @@
+---
+title: "Sync & Async"
+date: 2021-10-22
+slug: "/sync-and-async"
+---
+
+> The opposite of love is not hate, it's indifference. The opposite of art is not ugliness, it's indifference. The opposite of faith is not heresy, it's indifference. And the opposite of life is not death, it's indifference.
+- _Elie Wiesel (1928-2016), Romanian-born American writer_.
+
+***
+
+One thing I've noticed people don't get right when they start in software development is the concept of synchronous & asynchronous operations.
+
+Neither did I, back in the day. In fact, I needed to stop for a day to go deep on it so I can have the right picture. It's ironic, such a simple concept yet so hard to grasp.
+
+I'll start with what the docs say:
+
+### Synchronous Operations
+> Synchronization refers to the idea that multiple processes are to join up or handshake at a certain point, in order to reach an agreement or commit to a certain sequence of action.
+
+There was a time where machines are very limitated and could just run one task at time. Nowadays we have rocket power computation in our hands. Your phone is capable to process way more information than it used to have. The Industry is constantly increasing the CPU power in mobile devices over time (as well as adding more cores, better architecture, etc).
+
+But even with all this power, there are tasks that still need to happen in a _synchronised_ fashion. That's where the [Grand Central Dispatch](https://developer.apple.com/documentation/DISPATCH) starts to get complicated. Although you can dispatch tasks to happen at the same time, there will be a point in time they have to convey on the resource access. As in, which thread will touch the data first.
+
+Coming back to the point, the bottomline is - synchronisation (in this context) is about **one thing happening (or being executed) once at time, after the previous one and before the next one**.
+
+The catch is - when a synchronous task is dispatched, it also means this task will be executed **now**, **at the same time the task was dispatched**, and **will wait for the task to be completed to progress to the next task**. (bear this in mind to the next section).
+
+### Asynchronous Operations
+> \[...\] Asynchronous describes the relationship between two or more events/objects that do interact within the same system _**but do not occur at predetermined intervals**_ and _**do not necessarily rely on each other's existence to function**_. They are not coordinated with each other, meaning they could occur simultaneously or not because they have their own separate agenda.
+
+There's a misleading understanding about the opposite of synchronization. People seem to believe that the opposite of doing one thing is doing several, at time.
+
+That's what **Concurrent Process** means, in fact. Asynchronous operations don't necessarily happen at the same time. You can have a serial queue processing tasks asynchronously, for instance.
+
+What performing a task asynchronously essentially means is that this task will be executed _**later**_, as in _**not at the same time it was dispatched**_, and the control will be returned to the system so the next task can be executed. 
+
+In other words, it will compute that you want to perform this task, but it will do later and not block the thread to the other tasks that are about to come.
+
+This is a powerful feature for "non-blocking" systems, such as web frameworks (Nodejs, Swift NIO, etc). Where everything is a "Promise". So nothing is being executed now, but later.
+
+So when does later occur? Well, you define. It depends to where you're sending your operation to be executed. In iOS, what the system does is to send this taks to the end of the queue. So if you have 10 tasks to execute in a serial queue and the 5th is asynchronous (dispatched in the same queue), it will be pushed to be executed after the so defined 10th task.
+
+### References
+[Synchronization in Computer Science](https://en.wikipedia.org/wiki/Synchronization_(computer_science))
+
+[Definition of Asynchronous](https://www.techtarget.com/searchnetworking/definition/asynchronous)

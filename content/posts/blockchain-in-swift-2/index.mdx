@@ -10,33 +10,52 @@ This article is part of a serie of Building a Blockchain in Swift. You can find 
 
 ### Getting started
 
-I will keep this very simple and straight to the point. If you want to clone the sample project, you can find it [in my github](https://github.com/felipericieri/blockchain-in-swift). It uses Vapor 4 on top of Swift NIO 2.33.0, Xcode 13 and Swift 5.5.
+I will keep this very simple and straight to the point. If you want to clone the sample project, you can find it [in my github](https://github.com/felipericieri/blockchain-in-swift). It uses Vapor 4 on top of Swift NIO 2.33.0, Xcode 13 and Swift 5.2.
 
 #### Blockchain & the Blocks
 
-To give you a quick zoom out, a Blockchain essentially is just a kind of database. It will have a list of records that are stored in the shape of "blocks" and chained together by a cryptographic hash. So information is added to this database gradually and chronologically. That meansh that for a block to be valid, it needs to refer the previous block hash (that's how the chaining mechanism works). As a block will be added after another, it will also have a position in the chain (or _height_). The first block in the chain is considered the _genesis_ block. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
+Zooming out: a Blockchain is a kind of database. It will have a collection of transactions that are stored in the shape of "blocks" and chained together by a cryptographic hash. So information is added to this database gradually and chronologically. That means that for a block to be valid, it needs to refer the previous block hash (that's how the chaining mechanism works). As a block will be added after another, it will also have a "position" in the chain (or _height_). The first block in the chain is considered the _genesis_ block. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
 
-(image here to illustrate how the block and chain looks like)
+![Simple blockchain illustrated](/posts-images/blockchain-in-swift_img1.png "Simple blockchain illustrated")
 
-So how does a block looks like from within? Blockchains in the market have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below as the block structure:
+#### First steps: Transactions
+
+In our experiment, the transaction is fairly simple. Assuming it's shaped in the following structure:
+
+```swift
+struct Transaction {
+  /// Sender
+  let from: String
+  /// Receiver
+  let to: String
+  /// Amount of value
+  let amount: Double
+}
+```
+
+It takes the sender and the recipient of an transaction, which in our case can be any valid String, and the amount of value that is being transfered. Again, in the market this object has many others features. But that's what we'll need for now.
+
+#### Destructuring the Block
+
+How does a block looks like from within, you may ask? Blockchains in the market have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below as the block structure:
 
 ```swift
 final class Block {
   // The height the block is in the chain
-  private(set) var index: UInt 
+  private(set) var height: UInt 
   // Reference to the hash of the previous block
   private(set) var previousHash: String 
   // The block hash. It is `nil` until the block is minted
   var hash: String!
   // Random value that
-  var nonce: UInt = 0
+  private(set) var nonce: UInt = 0
   // Transactions added to the block
-  private(set) var transactions: [[String: AnyHashable]]
+  private(set) var transactions: [Transaction]
 
   // MARK: - Initialiser
 
-  init(index: UInt, previousHash: String) {
-    self.index = index
+  init(height: UInt, previousHash: String) {
+    self.height = height
     self.previousHash = previousHash
     transactions = []
   }
@@ -47,6 +66,11 @@ final class Block {
   func add(transaction: [String: AnyHashable]) {
     transactions.append(transaction)
   }
+
+  /// Increments nonce
+  func incrementsNonce() {
+    nonce += 1
+  }
 }
 ```
 
@@ -56,17 +80,21 @@ The block also has the ability to add transactions to itself. These transactions
 
 If you are wondering what the `nonce` property is about, don't worry for now. This is just a numerical value that we'll help us in the mining process. We'll cover it later.
 
-The hash should be computed consuming all the block information. For this example, we'll go with a custom hash for our block that uses the [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hashing function (to be covered later on!). So we'll need to convey in some kind of key that wraps all our block data so we can hash it.
+The hash should be computed consuming all block information. For this example, we'll go with a custom hash for our block that uses the [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hashing function (also to be covered later on!). So we'll need to convey in some kind of key that wraps all our block data so we can hash it.
 
 ```swift
 func generateKey() -> String {
   let transactionsData = try! JSONEncoder().encode(transactions)
   let transactionJsonString = String(data: transactionsData, encoding: .utf8)!
-  return String(index) + previousHash + String(nonce) + transactionJsonString
+  return String(height) + previousHash + String(nonce) + transactionJsonString
 }
 ```
 
+> ⚠️ SHA-1 is a unsecure cryptographic hash function. Bitcoin uses a double-hashed SHA-256 hash, and you should also consider more robust hashing algorithms, but for the sake of the experiment we'll go with SHA-1.
+
 Great! Now we have a single argument to feed our SHA-1 function and get our block a hash.
+
+> ⚠️ Transaction will need to conform to `Encodable` so it can be encoded to JSON.
 
 Next, let's design how the Blockchain will look like:
 
@@ -82,7 +110,11 @@ final class Blockchain {
   
   // MARK: - Initialiser
   
-  init(genesisBlock: Block) {
+  init(genesisBlock: Block) throws {
+    guard genesisBlock.hash != nil else {
+      throw Error.invalidBlockHash
+    }
+
     blocks.append(genesisBlock)
   }
 
@@ -99,40 +131,15 @@ final class Blockchain {
 }
 ```
 
-The blockchain holds the reference for the blocks and takes a block during initialisation (the genesis block). The blockchain also has the capability to add more blocks to the chain.
+The blockchain holds the reference for the blocks and takes a block upon initialisation (the genesis block). The blockchain also has the capability to add more blocks to the chain.
 
-As every block starts with no hash and this value is required, we throw an error if the block was tried to be added to the chain without a hash.
+Every block need to be minted (i.e. has a valid hash) before being added to the blockchain. We throw an error if the block was tried to be added to the chain without a hash.
 
-#### Transactions (cha-ching!)
+#### Side note
 
-You may have noticed that we are using a raw dictionary to represent the transactions in our blockchain. Let's give this layer some love.
-
-```swift
-final class Transaction {
-  /// Sender
-  let from: String
-  /// Receiver
-  let to: String
-  /// Amount of value
-  let amount: Double
-
-  // MARK: - Initialiser
-  
-  init(from: String, to: String, amount: Double) {
-    self.from = from
-    self.to = to
-    self.amount = amount
-  }
-}
-```
-
-Our transaction is fairly simple. It takes the sender and the recipient of an transaction, which in our case can be any valid String, and the amount of value that is being transfered. Again, in the market this object has many others features. In our case, these are the properties needed.
-
-#### One last thing
-
-If you take a closer look, you'll also notice that there's no reference whatsoever to the kind of value we are transactioning here (aka the currency). This is true in market blockchains as well. Bitcoin and Ether are just names given to the value that is being transfered from a wallet to another, but there's no _real_ (virtual or material) image of it. It is just a value in the records, that by the convention is known as the cryptocurrency itself.
+If you take a closer look, you'll also notice that there's no reference whatsoever to the kind of value we are transactioning here (aka the currency). This is true in blockchains in the market as well. Bitcoin, Ether, Ripple, etc are just names given to the value that is being transfered from a wallet to another, but there's no _real_ (virtual or material) image of it. It is just a value in the records, which by the convention is known as the cryptocurrency itself.
 
 ### Next steps
 
-Next we'll explore the mining feature. Follow up for [Part. 3](/building-a-blockchain-in-swift-part3)
+Next we'll explore the mining feature. Follow up for [Part. 3](/building-a-blockchain-in-swift-part3).
 

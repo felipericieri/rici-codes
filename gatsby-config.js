@@ -13,7 +13,7 @@ module.exports = {
     siteHeadline: `Felipe R. - Senior iOS Engineering 📱`,
     siteDescription: `Born & raised in Brazil. World Citizen. Currently in London, UK. This is Rici's Coding Soup.`,
     siteLanguage: `en`,
-    siteUrl: `https://codes.ricieri.me`,
+    siteUrl: `https://codingsoup.ricieri.me`,
     siteImage: `https://www.passaro.org/wp-content/uploads/2018/10/Arara-Azul-Reprodu%C3%A7%C3%A3o.jpg`,
     author: `@ricicodes`,
   },

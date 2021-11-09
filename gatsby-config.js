@@ -9,13 +9,13 @@ module.exports = {
     // You can also add new values here to query them like usual
     // See all options: https://github.com/LekoArts/gatsby-themes/blob/master/themes/gatsby-theme-minimal-blog/gatsby-config.js
     siteTitle: `Rici's Coding Soup. 🍜`,
-    siteTitleAlt: `Rici's Coding Soup (mostly Mobile Engineering)`,
-    siteHeadline: `Felipe R. - Mobile Engineering 📱`,
+    siteTitleAlt: `Rici's Coding Soup. 🍜`,
+    siteHeadline: `Felipe R. - Senior iOS Engineering 📱`,
     siteDescription: `Born & raised in Brazil. World Citizen. Currently in London, UK. This is Rici's Coding Soup.`,
     siteLanguage: `en`,
     siteUrl: `https://codes.ricieri.me`,
     siteImage: `https://www.passaro.org/wp-content/uploads/2018/10/Arara-Azul-Reprodu%C3%A7%C3%A3o.jpg`,
-    author: `@felipericieri`,
+    author: `@ricicodes`,
   },
   plugins: [
     {
@@ -31,7 +31,7 @@ module.exports = {
         externalLinks: [
           {
             name: `Twitter`,
-            url: `https://twitter.com/felipericieri`,
+            url: `https://twitter.com/ricicodes`,
           },
           {
             name: `Linkedin`,

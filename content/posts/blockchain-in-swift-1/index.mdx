@@ -4,22 +4,22 @@ date: 2021-10-25
 slug: "/building-a-blockchain-in-swift-part1"
 ---
 
-I don't even try to hide my enthusiasm for the decentralised technologies that are emerging lately. Being able to drop off the man-in-the-middle from financial transactions and all sorts of agreements; and replace them with a contract hosted - and owned - by the community is a huge step forward. I don't know who you are, Satoshi, but in behalf of all human kind I thank you for your legacy!
+I don't even try to hide my enthusiasm for the decentralised technologies that are emerging lately. Being able to drop off the man-in-the-middle from financial transactions and all sorts of agreements; and replace them with a contract hosted - and owned - by the community is a huge step forward.
 
-Since early this year I've been studying how Bitcoin and the Lightning Network works. Not only Bitcoin's Blockchain, but Vitalik's one as well. Ethereum and it's Web 3.0 is a revolution. Writing smart contracts is something that is being thrilling my days, lately.
+Since early this year I've been studying how Bitcoin and the Lightning Network works. Not only Satoshi's Blockchain, but Vitalik's one as well. Ethereum and it's Web 3.0 is a revolution by itself. Writing smart contracts is something that is being thrilling my days, lately.
 
 ### How mining works in the Blockchain
 
-The most facinating (and somehow confusing for newbies like me) concept I ever wanted to learn is how the heck mining a block in the blockchain works. It is some interesting piece of software, this one. 
+The most facinating (and somehow confusing for newbies like me) concept I ever wanted to learn is how the heck mining a block in the blockchain works. It's an interesting piece of software, this one. 
 
 So in the Bitcoin blockchain (and Ethereum 1.0) it is achieved by the adoption of a protocol named [**Proof of Work**](https://en.wikipedia.org/wiki/Proof_of_work). To be able to push a new block to the chain, the Node (or Miner, in this context) needs to solve a mathematical problem first, which is to find a hash for the brand new block that starts with X zeros. 
 
-**X** here is elastic. It expands and shrinks according to how many nodes are in the network and how often blocks are being minted. Satoshi hardcoded an interval of 10 minutes for each new block. By the time I write this article, the Miner needs to find a hash for their block that starts with **19 zeros** 😧! 
+**X** here is elastic. It expands and shrinks according to how many nodes are in the network and how often blocks are being minted. Satoshi hardcoded an interval of 10 minutes(-ish) for each new block. By the time I'm writting this article, the Miner needs to find a hash for their block that starts with **19 zeros** 😧! 
 
-It's as hard as simply as it sounds like. Just find this hash, and you can push your block. Then you send the "proof of work" (aka the hash for that block) to other nodes in the network so they can confirm that your block is legit, saving them the time (and energy!) to spend finding the same hash.
+It's as hard as simply as it sounds like. Just find this hash, and you can push your block. You send the "proof of work" (aka the hash for that block) to other nodes in the network so they can confirm that your block is legit, saving them the time (and energy!) to spend finding the same hash.
 
 ---
 
-So I was thinking... _what if_ I build a Blockchain myself, but in Swift? Just for fun 😛.
+In its essence, a blockchain is a simple mechanism and can easily be simulated. I did an experiment in Swift that I'll be sharing in the next chapters. So if that's something you're interested in, stay tuned!
 
-That's what these series are about. Follow for [Part. 2](/building-a-blockchain-in-swift-part2)!
+Follow for [Part. 2](/building-a-blockchain-in-swift-part2).

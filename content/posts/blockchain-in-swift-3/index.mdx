@@ -16,7 +16,7 @@ Now that we have our blockchain settled and we know how the blocks and transacti
 final class MiningService {
   
   /// 1. How many zeroes we'll need to regard so the hash can be accepted
-  private var blockchainDifficulty: String
+  private let blockchainDifficulty: String
   
   // MARK: - Initialiser
   
@@ -28,10 +28,10 @@ final class MiningService {
   
   /// 2. Mines a the next block in the blockchain
   func mineBlock(previousBlock: Block, transactions: [Transaction]) -> Block {
-    let nextIndex = previousBlock.index + 1
-    print("⛏ Start mining block at height \(nextIndex)...")
+    let nextHeight = previousBlock.height + 1
+    print("⛏ Start mining block at height \(nextHeight)...")
     // 3. 
-    let block = Block(index: nextIndex, previousHash: previousBlock.hash)
+    let block = Block(height: nextHeight, previousHash: previousBlock.hash)
     transactions.forEach { block.add(transaction: $0) }
     
     // 4.
@@ -43,12 +43,12 @@ final class MiningService {
   
   /// 5. Generate Hash for Block according to the difficulty of this blockchain
   func generateHash(for block: Block) -> String {
-    print("🔑 Finding the hash for block at height \(block.index)...")
+    print("🔑 Finding the hash for block at height \(block.height)...")
     var hash = block.key.toSHA1()
     
     // 6. Search for a hash prefix according to the Blockchain difficulty
     while !hash.hasPrefix(blockchainDifficulty) {
-      block.nonce += 1
+      block.incrementNonce()
       hash = block.key.toSHA1()
       print(hash)
     }
@@ -69,11 +69,17 @@ Wow, hold on! We have too much going on there. Let's break it down:
 
 _P.S.: In this implementation I'm using a custom SHA-1 method which you can find it [here](https://gist.github.com/felipericieri/c296fa28198b8671a927ec550a522e53)_
 
-#### The mining algorithm
+#### The Mining Algorithm
 
-As you can see, the way we go to find another hash is to increment our `nonce` value. This is exactly the purpose we have it there. Is just a random number that helps us to find a hash that solves the blockchain's mathematical problem. We can't really change any other value in the block, it should stay as it is.
+In our payload, we can't really change a thing. We should keep transactions integrity, it should be added to the chain as it is. The way we use to find another hash is to increment our `nonce` value. This is precisely the only purpose we have it there. It's just a random number that helps us to find a hash that solves the blockchain's mathematical problem.
 
-This is a very simple way to implement the Proof-of-Work protocol, but not so efficient. You see, you don't have any guarantee that the `nonce` you're using next is the right one, so there's no other way apart from trial-and-error to find this value. Feel free to explore other ways to implement yours! 
+In a live blockchain, this algorithm isn't part of the software. We are just putting it here for the experiment. This is the Node duty - and where the gold is -, so it uses it's own solution.
+
+---
+
+You see, you don't have any guarantee that the `nonce` you're using next is the right one, so there's no other way apart from trial-and-error to find this value. 
+
+This is a very simple way to implement the Proof-of-Work protocol, but not so efficient. So feel free to explore other ways to implement yours! 
 
 The beauty behind this is that adds entropy to this problem. It's a fair play for all nodes in the network. Whichever finds the hash first, can mine the block.
 
@@ -87,12 +93,16 @@ Now we have enough to try to create our own blockchain. This is how we can use i
 // Creates the Mining Service
 let miningService = MiningService(difficulty: "00") // starting with just 2 zeroes
 // Generates Genesis Block
-let genesisBlock = Block(index: 0, previousHash: "0000000000000000000000000000000000000000") // 40 zeroes
+let genesisBlock = Block(height: 0, previousHash: "0000000000000000000000000000000000000000") // 40 zeroes
 // Tries to find the hash for the genesis block
 genesisBlock.hash = miningService.generateHash(for: genesisBlock)
 // Once it finds the hash, create the Blockchain
-let blockchain = Blockchain(genesisBlock: genesisBlock)
-print("Blockchain is ready! 🎉")
+do {
+  let blockchain = try Blockchain(genesisBlock: genesisBlock)
+  print("Blockchain is ready! 🎉")
+} catch let _ {
+  print("Oh-oh! The block hash isn't valid.")
+}
 ```
 
 If you execute the code above (you can use a Swift Playground for it), you should get some output similar to this one in your console:
@@ -124,7 +134,11 @@ Now you have a blockchain you can push transactions to! Let's try to transfer so
 // Creates a new block
 let transaction = Transaction(from: "Felipe", to: "Tim Cook", amount: 100)
 let newBlock = miningService.mineBlock(previousBlock: genesisBlock, transactions: [transaction])
-blockchain.add(block: newBlock)
+do {
+  try blockchain.add(block: newBlock)
+} catch let _ {
+  print("Oh-oh! The block hash isn't valid.")
+}
 ```
 
 In your console, you should get something like this:
@@ -175,8 +189,8 @@ And that's how your blockchain should look like when printed as a JSON object:
 
 ### Wrapping up
 
-Woohoo! We've just written our first Blockchain in Swift, using Proof-of-Work! As I've mentioned, we aren't using the most effective algorithm to find the hash in the market, but that's a great start. That's also not the only protocol out there, most advanced blockchains uses protocols such as **Proof-of-Stake**, **Proof-of-Authority**, **Proof-of-Space**, and many others. 
+We've just written our first Blockchain in Swift using Proof-of-Work! As I've mentioned, we aren't using the most effective algorithm to find the hash in the market, but that's a great start. That isn't the only protocol out there, though. Most advanced blockchains use protocols such as **Proof-of-Stake**, **Proof-of-Authority**, **Proof-of-Space**, and many others.
 
-Hope you had as much fun as I had writing this. Thanks for reading! If you have any suggestions or questions, please hit me in [twitter](https://twitter.com/ricicodes)!
+Hope you had as much fun as I had writting this. Thanks for reading! If you have any suggestions or questions, please hit me in [twitter](https://twitter.com/ricicodes)!
 
 _Valeu_! ✌️

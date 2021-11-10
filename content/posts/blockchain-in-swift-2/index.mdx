@@ -14,13 +14,15 @@ I will keep this very simple and straight to the point. If you want to clone the
 
 #### Blockchain & the Blocks
 
-Zooming out: a Blockchain is a kind of database. It will have a collection of transactions that are stored in the shape of "blocks" and chained together by a cryptographic hash. So information is added to this database gradually and chronologically. That means that for a block to be valid, it needs to refer the previous block hash (that's how the chaining mechanism works). As a block will be added after another, it will also have a "position" in the chain (or _height_). The first block in the chain is considered the _genesis_ block. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
+Zooming out: a Blockchain is a kind of database. You can use to whatever you want, it is just a wait to persist data. In our experiment, it will have a collection of transactions. 
+
+This data is stored in the shape of "blocks" and chained together by a cryptographic hash. So information is added to this database gradually and chronologically. Every block needs to refer the previous block hash (that's how the chaining mechanism works). As a block will be added after another, each one will have a "position" in the chain (or _height_). The first block in the chain is considered the _genesis_ block. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
 
 ![Simple blockchain illustrated](/posts-images/blockchain-in-swift_img1.png "Simple blockchain illustrated")
 
 #### First steps: Transactions
 
-In our experiment, the transaction is fairly simple. Assuming it's shaped in the following structure:
+In our experiment, the transaction is fairly simple. Let's assume it's structured as follows:
 
 ```swift
 struct Transaction {
@@ -33,11 +35,11 @@ struct Transaction {
 }
 ```
 
-It takes the sender and the recipient of an transaction, which in our case can be any valid String, and the amount of value that is being transfered. Again, in the market this object has many others features. But that's what we'll need for now.
+It takes the sender and the recipient of an transaction, which in our case can be any valid `String`, and the amount of value that is being transfered. Again, in the market this object has many others features. But that's what we'll need for now.
 
 #### Destructuring the Block
 
-How does a block looks like from within, you may ask? Blockchains in the market have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below as the block structure:
+How does a block looks like from within, you may ask? Blockchains have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below:
 
 ```swift
 final class Block {

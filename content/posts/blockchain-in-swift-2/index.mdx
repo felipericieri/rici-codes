@@ -4,85 +4,102 @@ date: 2021-10-27
 slug: "/building-a-blockchain-in-swift-part2"
 ---
 
+> Designing Blocks, the Chain, adding Transactions and defining the Consensus Mechanism.
+
 ### How I've got here
 
-This article is part of a serie of Building a Blockchain in Swift. You can find [here](/building-a-blockchain-in-swift-part1) the Part. 1.
+This article is part of the serie "Building a Blockchain in Swift". You can find [here](/building-a-blockchain-in-swift-intro) the Intro.
 
 ### Getting started
 
-I will keep this very simple and straight to the point. If you want to clone the sample project, you can find it [in my github](https://github.com/felipericieri/blockchain-in-swift). It uses Vapor 4 on top of Swift NIO 2.33.0, Xcode 13 and Swift 5.2.
+I will keep this very simple and straight to the point. If you want to clone the sample project, you can find it [in my github](https://github.com/felipericieri/blockchain-in-swift). It uses Vapor 4.5, Swift NIO 2.33.0, Xcode 13 and Swift 5.2.
 
-#### Blockchain & the Blocks
+#### How mining works
 
-Zooming out: a Blockchain is a kind of database. You can use to whatever you want, it is just a wait to persist data. In our experiment, it will have a collection of transactions. 
+In a nutshell, in the Bitcoin's blockchain it is achieved by the adoption of a consensus mechanism called [Proof-of-Work](https://en.wikipedia.org/wiki/Proof_of_work). Long story short, to be able to push a new block to the chain, the Node (or Miner, in this context) needs to solve a mathematical problem first: to find a specific cryptographic hash for that brand new block that starts with X zeros.
 
-This data is stored in the shape of "blocks" and chained together by a cryptographic hash. So information is added to this database gradually and chronologically. Every block needs to refer the previous block hash (that's how the chaining mechanism works). As a block will be added after another, each one will have a "position" in the chain (or _height_). The first block in the chain is considered the _genesis_ block. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
+**X** here is elastic. It expands and shrinks according to how many nodes are in the network and how often blocks are being minted. It's known as the [Blockchain Difficulty](https://en.bitcoin.it/wiki/Difficulty).
 
-![Simple blockchain illustrated](/posts-images/blockchain-in-swift_img1.png "Simple blockchain illustrated")
+Satoshi hardcoded an interval of 10 minutes(-ish) for each new block. By the time I'm writting this article, the Miner needs to find a hash for their block that starts with **19 zeros**!
+
+It's as hard & simply as it sounds like. Find this hash and you can push your block. Once you did it, you should send the "proof" of your work (aka the hash for that block) to other nodes in the network so they can confirm that your block is legit, saving them the time (and energy!) to try finding that given hash.
+
+#### Blockchain & the Blocks
+
+**Zooming out:** a blockchain, such as the Bitcoin, works similarly to a database. It will have a collection of transactions that are stored in the shape of "blocks" and linked together by a _**cryptographic hash**_.
+
+Information is added to this database gradually and chronologically. For a block to be valid, it needs to refer the previous block's hash (it's how the chaining happens).
+
+A block will be added one after another, the "position" of each block is known as the _**height**_. The first block in the chain is considered the _**genesis block**_. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
+
+![Blockchain illustrated](/posts-images/blockchain_illustration.png "Blockchain illustrated")
 
 #### First steps: Transactions
 
-In our experiment, the transaction is fairly simple. Let's assume it's structured as follows:
+For our experiment, we'll go with a fairly simple transaction. Assuming it's shaped in the following structure:
 
 ```swift
 struct Transaction {
-  /// Sender
-  let from: String
-  /// Receiver
-  let to: String
-  /// Amount of value
+  let sender: String
+  let receiver: String
   let amount: Double
 }
 ```
 
-It takes the sender and the recipient of an transaction, which in our case can be any valid `String`, and the amount of value that is being transfered. Again, in the market this object has many others features. But that's what we'll need for now.
+It takes the sender and the recipient of an transaction, which in our case can be any valid `String`, and the amount of value that is being transfered. Again, in production this object has many others properties. But that's what we'll need for now.
+
+Next, we have the Block. But before jumping into it, we need to talk about _**hashes**_.
+
+#### Hash
+
+Hashes are intensively used in the blockchain. Wallets, Contracts, Tokens addresses and Transactions identifies are expressed in hashes. A hash is a fixed length piece of data that represents the "fingerprint" of the subjected input.
+
+Hashes are calculated by _**hash functions**_. The benefit of a hash is that if the input changes, the output will also be different.
+
+![Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.](/posts-images/blockchain_illustration.png "Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.")
+
+Each block in the blockchain has a hash. The hash should be computed consuming all block information. The goal here is protect the integrity of the block data.
 
 #### Destructuring the Block
 
-How does a block looks like from within, you may ask? Blockchains have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below:
+How does a block looks like from within, you may ask? Blockchains in the market have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below:
 
 ```swift
 final class Block {
-  // The height the block is in the chain
-  private(set) var height: UInt 
-  // Reference to the hash of the previous block
-  private(set) var previousHash: String 
-  // The block hash. It is `nil` until the block is minted
-  var hash: String!
-  // Random value that
-  private(set) var nonce: UInt = 0
-  // Transactions added to the block
-  private(set) var transactions: [Transaction]
 
-  // MARK: - Initialiser
+  private(set) var height: UInt 
+  private(set) var previousHash: String 
+  var hash: String!
+  private(set) var nonce: UInt = 0
+  private(set) var transactions: [Transaction]
 
   init(height: UInt, previousHash: String) {
     self.height = height
     self.previousHash = previousHash
     transactions = []
   }
-
-  // MARK: - Block features
   
-  /// Adds a transaction to this block
   func add(transaction: [String: AnyHashable]) {
     transactions.append(transaction)
   }
 
-  /// Increments nonce
   func incrementsNonce() {
     nonce += 1
   }
 }
 ```
 
-A block will always have no hash until it is minted. It can only be minted if it complies with the blockchain current difficulty (which is the mathematical problem it needs to solve). In our case, we want to find a hash prefixed with a certain repetition of zeroes.
+Let me walk you through it:
+- First we define the block's properties. It will have a `height` and `previousHash` values injected upon initialization;
+- A block has no hash until it is minted. So it will be null first, but we'll assume it is computed when we try to add it to our blockchain;
+- The block also has the ability to add transactions to itself. These transactions will be flatten in a JSON object that will be used in the hash computation.
+- There's a property that we didn't cover yet - the `nonce`. Don't worry for now. This is just a numerical value that we'll help us in the mining process. We'll cover it later.
 
-The block also has the ability to add transactions to itself. These transactions will be flatten in a JSON object that will be used in the hash computation.
+The block can only be minted if its hash complies with the blockchain current difficulty (which is the mathematical problem it needs to solve - we want to find a hash prefixed with a certain repetition of zeroes).
 
-If you are wondering what the `nonce` property is about, don't worry for now. This is just a numerical value that we'll help us in the mining process. We'll cover it later.
+For this example, we'll go with a custom hash for our block that uses the [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hash function (also to be covered later on!). So we'll need to convey in some kind of key that wraps all our block data so we can hash it.
 
-The hash should be computed consuming all block information. For this example, we'll go with a custom hash for our block that uses the [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hashing function (also to be covered later on!). So we'll need to convey in some kind of key that wraps all our block data so we can hash it.
+> ⚠️ SHA-1 is a unsecure cryptographic hash function. Bitcoin uses a double-hashed SHA-256 hash, and you should also consider more robust hashing algorithms, but for the sake of the experiment we'll go with SHA-1.
 
 ```swift
 func generateKey() -> String {
@@ -92,11 +109,9 @@ func generateKey() -> String {
 }
 ```
 
-> ⚠️ SHA-1 is a unsecure cryptographic hash function. Bitcoin uses a double-hashed SHA-256 hash, and you should also consider more robust hashing algorithms, but for the sake of the experiment we'll go with SHA-1.
+> ⚠️ Disclaimer: `Transaction` will need to conform to `Encodable` so it can be encoded to JSON.
 
 Great! Now we have a single argument to feed our SHA-1 function and get our block a hash.
-
-> ⚠️ Transaction will need to conform to `Encodable` so it can be encoded to JSON.
 
 Next, let's design how the Blockchain will look like:
 
@@ -107,10 +122,7 @@ final class Blockchain {
     case invalidBlockHash
   }
 
-  /// Collection of blocks in this chain
   private(set) var blocks: [Block] = []
-  
-  // MARK: - Initialiser
   
   init(genesisBlock: Block) throws {
     guard genesisBlock.hash != nil else {
@@ -120,9 +132,6 @@ final class Blockchain {
     blocks.append(genesisBlock)
   }
 
-  // MARK: - Blockchain features
-
-  /// Adds a block to the chain
   func add(block: Block) throws {
     guard block.hash != nil else {
       throw Error.invalidBlockHash
@@ -133,15 +142,15 @@ final class Blockchain {
 }
 ```
 
-The blockchain holds the reference for the blocks and takes a block upon initialisation (the genesis block). The blockchain also has the capability to add more blocks to the chain.
+The Blockchain holds the reference for the blocks and takes a block upon initialization (the Genesis Block). Finally, it has the capability to add more blocks to the chain.
 
-Every block need to be minted (i.e. has a valid hash) before being added to the blockchain. We throw an error if the block was tried to be added to the chain without a hash.
+We throw an error if the block was tried to be added to the chain without a hash.
 
 #### Side note
 
-If you take a closer look, you'll also notice that there's no reference whatsoever to the kind of value we are transactioning here (aka the currency). This is true in blockchains in the market as well. Bitcoin, Ether, Ripple, etc are just names given to the value that is being transfered from a wallet to another, but there's no _real_ (virtual or material) image of it. It is just a value in the records, which by the convention is known as the cryptocurrency itself.
+If you take a closer look, you'll also notice that there's no reference whatsoever to the kind of value we are transactioning here (aka the currency). This is true in blockchains in the market as well. Bitcoin, Ether, Ripple… etc are just names given to the value that is being transfered from a wallet to another. There's no _real_ (virtual or material) image of it. It is just a value in the ledger, which by convention is known as the cryptocurrency itself.
 
 ### Next steps
 
-Next we'll explore the mining feature. Follow up for [Part. 3](/building-a-blockchain-in-swift-part3).
+Next we'll explore the mining feature. Follow up for [Part. 2](/building-a-blockchain-in-swift-part2).
 

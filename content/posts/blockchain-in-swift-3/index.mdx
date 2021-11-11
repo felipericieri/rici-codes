@@ -1,7 +1,11 @@
 ---
-title: "Building a Blockchain in Swift (Part. 3)"
+title: "Building a Blockchain in Swift (Part. 2)"
 date: 2021-10-31
-slug: "/building-a-blockchain-in-swift-part3"
+slug: "/building-a-blockchain-in-swift-part2"
+tags:
+  - Blockchain
+  - Swift
+  - Vapor
 ---
 
 > Exploring the Nonce and playing with the Mining Service.
@@ -115,17 +119,17 @@ do {
 If you execute the code above (you can use a Swift Playground for it), you should get some output similar to this one in your console:
 
 ```
-🔑 Finding the hash for block at height 0...
-1ca360046cde59c93cdae5ec5a1a2dc7495d4a58
-e42d0bbf1e810538cbdce382c040b599a2ddadee
-d4d96b51564127ae292448f75603f347c5b68947
-7bac36206d7c747879f765547e7b2a2f35dc5094
+🔑 Searching the hash for block at height 0...
+1CA360046CDE59C93CDAE5EC5A1A2DC7495D4A58
+E42D0BBF1E810538CBDCE382C040B599A2DDADEE
+D4D96B51564127AE292448F75603F347C5B68947
+7BAC36206D7C747879F765547E7B2A2F35DC5094
 ....
-5ac1df0c735ff12ca81623d5bca5da56553061b6
-556a5a8ba5b8ec0167b35d782f10a22a1d997661
-d0e0a2882b36b08196a0cc291532d8f213898b78
-006809c305f6f9790890e6d7c7319817f15fcee0
-🙌 Hash found! - 006809c305f6f9790890e6d7c7319817f15fcee0
+5AC1DF0C735FF12CA81623D5BCA5DA56553061B6
+556A5A8BA5B8EC0167B35D782F10A22A1D997661
+D0E0A2882B36B08196A0CC291532D8F213898B78
+006809C305F6F9790890E6D7C7319817F15FCEE0
+🙌 Hash found! - 006809C305F6F9790890E6D7C7319817F15FCEE0
 Blockchain is ready! 🎉
 ```
 
@@ -153,19 +157,21 @@ do {
 In your console, you should get something like this:
 
 ```
-⛏ Start mining block at height 1...
-🔑 Finding the hash for block at height 1...
-d38bb30cbf0fbc474a46b2d77cc75150ab8a971d
-9abc08b38a3614345eeec23cdfed8fce3b78aa54
-884ff549811fb2e67664b9c09003436d459b3d0c
+⛏ Starting to mine the block at height 1...
+🔑 Searching the hash for block at height 1...
+C84DA890248ED95DF39E7AD15CACE49EA57BD6A4
+B75FE89D8125D91B6EA7B836F5C1765737741F8E
+8D12099BE01B765E0EA1F2675525EEA216448E94
+E2DD2E47050DFB75C1217216EBB85E1D99A35935
 ...
-06cc51dc417c8fd9df0202f0ebd4a4996ffb9954
-2d393c75dcb0e9f59e123696b1a19634991de156
-00e97b38c191495227b6d3cb5fdaad175f947e21
-🙌 Hash found! - 00e97b38c191495227b6d3cb5fdaad175f947e21
+C94DB820D09643D478229EA142EC0B4819503CBD
+48EAA579E1E8BA192D9F2748B30989FCE7F745C8
+43146E96DDBBC7201A1BCC9CA4C5EF588FA0219D
+00B33255769C3A5CD38E757D2C31E8CF2ACDF3C2
+🙌 Hash found! - 00B33255769C3A5CD38E757D2C31E8CF2ACDF3C2
 ```
 
-> This time the function ran for 525 times! 😱
+> This time the function ran for 116 times!
 
 And that's how your blockchain should look like when printed as a JSON object:
 
@@ -175,22 +181,22 @@ And that's how your blockchain should look like when printed as a JSON object:
     {
       "nonce": 218,
       "previousHash": "0000000000000000000000000000000000000000",
-      "hash": "006809c305f6f9790890e6d7c7319817f15fcee0",
+      "hash": "006809C305F6F9790890E6D7C7319817F15FCEE0",
       "transactions": [],
-      "index": 0
+      "height": 0
     },
     {
-      "nonce": 525,
-      "previousHash": "006809c305f6f9790890e6d7c7319817f15fcee0",
-      "hash": "00e97b38c191495227b6d3cb5fdaad175f947e21",
+      "nonce": 116,
+      "previousHash": "006809C305F6F9790890E6D7C7319817F15FCEE0",
+      "hash": "00B33255769C3A5CD38E757D2C31E8CF2ACDF3C2",
       "transactions": [
         {
-          "to": "Tim Cook",
-          "amount": 100,
-          "from": "Felipe"
+          "sender": "Felipe",
+          "receiver": "Tim Cook",
+          "amount": 100
         }
       ],
-      "index": 1
+      "height": 1
     }
   ]
 }

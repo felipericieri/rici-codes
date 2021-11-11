@@ -1,7 +1,11 @@
 ---
-title: "Building a Blockchain in Swift (Part. 2)"
+title: "Building a Blockchain in Swift (Part. 1)"
 date: 2021-10-27
-slug: "/building-a-blockchain-in-swift-part2"
+slug: "/building-a-blockchain-in-swift-part1"
+tags:
+  - Blockchain
+  - Swift
+  - Vapor
 ---
 
 > Designing Blocks, the Chain, adding Transactions and defining the Consensus Mechanism.
@@ -56,7 +60,7 @@ Hashes are intensively used in the blockchain. Wallets, Contracts, Tokens addres
 
 Hashes are calculated by _**hash functions**_. The benefit of a hash is that if the input changes, the output will also be different.
 
-![Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.](/posts-images/blockchain_illustration.png "Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.")
+![Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.](/posts-images/hash_illustration.png "Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.")
 
 Each block in the blockchain has a hash. The hash should be computed consuming all block information. The goal here is protect the integrity of the block data.
 
@@ -153,4 +157,3 @@ If you take a closer look, you'll also notice that there's no reference whatsoev
 ### Next steps
 
 Next we'll explore the mining feature. Follow up for [Part. 2](/building-a-blockchain-in-swift-part2).
-

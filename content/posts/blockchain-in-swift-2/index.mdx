@@ -8,39 +8,39 @@ tags:
   - Vapor
 ---
 
-> Designing Blocks, the Chain, adding Transactions and defining the Consensus Mechanism.
+> Designing blocks, the chain, adding transactions and defining the consensus mechanism.
 
-### How I've got here
+### Zoom out
 
-This article is part of the serie "Building a Blockchain in Swift". You can find [here](/building-a-blockchain-in-swift-intro) the Intro.
+This article is part of the series "Building a Blockchain in Swift". You can find the intro [here](/building-a-blockchain-in-swift-intro).
 
 ### Getting started
 
-I will keep this very simple and straight to the point. If you want to clone the sample project, you can find it [in my github](https://github.com/felipericieri/blockchain-in-swift). It uses Vapor 4.5, Swift NIO 2.33.0, Xcode 13 and Swift 5.2.
+I'll keep this very simple and straight to the point. If you want to clone the sample project, you can find it [in my Github](https://github.com/felipericieri/blockchain-in-swift). It uses Vapor 4.5, Swift NIO 2.33.0, Xcode 13 and Swift 5.2.
 
 #### How mining works
 
-In a nutshell, in the Bitcoin's blockchain it is achieved by the adoption of a consensus mechanism called [Proof-of-Work](https://en.wikipedia.org/wiki/Proof_of_work). Long story short, to be able to push a new block to the chain, the Node (or Miner, in this context) needs to solve a mathematical problem first: to find a specific cryptographic hash for that brand new block that starts with X zeros.
+In a nutshell, in the Bitcoin blockchain consensus is achieved by the adoption of a mechanism called [proof-of-work](https://en.wikipedia.org/wiki/Proof_of_work). Long story short, to be able to push a new block to the chain, the node (or miner, in this context) needs to solve a mathematical problem first: to find a specific cryptographic hash for that brand new block that starts with X zeros.
 
-**X** here is elastic. It expands and shrinks according to how many nodes are in the network and how often blocks are being minted. It's known as the [Blockchain Difficulty](https://en.bitcoin.it/wiki/Difficulty).
+**X** here is elastic. It expands and shrinks according to how many nodes are in the network and how often blocks are being minted. It’s known as the [blockchain difficulty](https://en.bitcoin.it/wiki/Difficulty).
 
-Satoshi hardcoded an interval of 10 minutes(-ish) for each new block. By the time I'm writting this article, the Miner needs to find a hash for their block that starts with **19 zeros**!
+Satoshi hardcoded an interval of 10 minutes(-ish) for each new block. By the time I’m writing this article, the miner needs to find a hash for their block that starts with **19 zeros**!
 
-It's as hard & simply as it sounds like. Find this hash and you can push your block. Once you did it, you should send the "proof" of your work (aka the hash for that block) to other nodes in the network so they can confirm that your block is legit, saving them the time (and energy!) to try finding that given hash.
+It’s as hard & simply as it sounds like. Find this hash and you can push your block. Once you did it, you should send the "proof" of your work (aka the hash for that block) to other nodes in the network so they can confirm that your block is legit, saving them the time (and energy!) to try finding that given hash.
 
-#### Blockchain & the Blocks
+#### Blockchain and the blocks
 
-**Zooming out:** a blockchain, such as the Bitcoin, works similarly to a database. It will have a collection of transactions that are stored in the shape of "blocks" and linked together by a _**cryptographic hash**_.
+**Zooming out:** a blockchain, such as Bitcoin, works similarly to a database. It will have a collection of transactions that are stored in the shape of “blocks” and linked together by a _**cryptographic hash**_.
 
 Information is added to this database gradually and chronologically. For a block to be valid, it needs to refer the previous block's hash (it's how the chaining happens).
 
-A block will be added one after another, the "position" of each block is known as the _**height**_. The first block in the chain is considered the _**genesis block**_. Is the only one that doesn't have a link to a previous block (holds an invalid address instead).
+A block will be added one after another. The “position” of each block is known as the _**height**_. The first block in the chain is considered the _**genesis block**_. Is the only one that doesn’t have a link to a previous block. It holds an invalid address instead
 
 ![Blockchain illustrated](/posts-images/blockchain_illustration.png "Blockchain illustrated")
 
 #### First steps: Transactions
 
-For our experiment, we'll go with a fairly simple transaction. Assuming it's shaped in the following structure:
+For our experiment, we'll go with a fairly simple transaction. It’s shaped in the following structure:
 
 ```swift
 struct Transaction {
@@ -50,23 +50,23 @@ struct Transaction {
 }
 ```
 
-It takes the sender and the recipient of an transaction, which in our case can be any valid `String`, and the amount of value that is being transfered. Again, in production this object has many others properties. But that's what we'll need for now.
+It takes the sender and the recipient of a transaction, which in our case can be any valid `String`, and the amount of value that is being transferred. Again, in production this object has many other properties. But that’s what we’ll need for now.
 
-Next, we have the Block. But before jumping into it, we need to talk about _**hashes**_.
+Next, we have the block. But before jumping into it, we need to talk about _**hashes**_.
 
-#### Hash
+#### About hashes
 
-Hashes are intensively used in the blockchain. Wallets, Contracts, Tokens addresses and Transactions identifies are expressed in hashes. A hash is a fixed length piece of data that represents the "fingerprint" of the subjected input.
+Hashes are intensively used in the blockchain. wallets, contracts, tokens addresses and transactions identifiers are expressed in hashes. A hash is a fixed-length piece of data that represents the "fingerprint" of the subjected input.
 
 Hashes are calculated by _**hash functions**_. The benefit of a hash is that if the input changes, the output will also be different.
 
-![Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.](/posts-images/hash_illustration.png "Hash Function illustrated - considering inputs A and B are distinct, the outputs will also differ.")
+![Hash function illustrated — considering inputs A and B are distinct, the outputs will also differ.](/posts-images/hash_illustration.png "Hash function illustrated — considering inputs A and B are distinct, the outputs will also differ.")
 
-Each block in the blockchain has a hash. The hash should be computed consuming all block information. The goal here is protect the integrity of the block data.
+Each block in the blockchain has a hash. The hash should be computed by consuming all block information. The goal here is protect the integrity of the block data.
 
-#### Destructuring the Block
+#### Destructuring the block
 
-How does a block looks like from within, you may ask? Blockchains in the market have a tons of features that we'll not quite need in our own, so to keep it simple bear the declaration below:
+How does a block looks like from within, you may ask? Blockchains in the market have a ton of features that we’ll not quite need on our own, so to keep it simple see the declaration below::
 
 ```swift
 final class Block {
@@ -94,16 +94,16 @@ final class Block {
 ```
 
 Let me walk you through it:
-- First we define the block's properties. It will have a `height` and `previousHash` values injected upon initialization;
-- A block has no hash until it is minted. So it will be null first, but we'll assume it is computed when we try to add it to our blockchain;
-- The block also has the ability to add transactions to itself. These transactions will be flatten in a JSON object that will be used in the hash computation.
-- There's a property that we didn't cover yet - the `nonce`. Don't worry for now. This is just a numerical value that we'll help us in the mining process. We'll cover it later.
+- First we define the block's properties. It will have a `height` and `previousHash` values injected upon initialization.
+- A block has no hash until it is minted. So it will be null first, but we'll assume it is computed when we try to add it to our blockchain.
+- The block also has the ability to add transactions to itself. These transactions will be flatten into a JSON object that will be used in the hash computation.
+- There's a property that we didn't cover yet — the `nonce`. Don't worry for now. This is just a numerical value that we'll help us in the mining process. We'll cover it later.
 
-The block can only be minted if its hash complies with the blockchain current difficulty (which is the mathematical problem it needs to solve - we want to find a hash prefixed with a certain repetition of zeroes).
+The block can only be minted if its hash complies with the blockchain's current difficulty (which is the mathematical problem it needs to solve — we want to find a hash prefixed with a certain repetition of zeroes).
 
-For this example, we'll go with a custom hash for our block that uses the [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hash function (also to be covered later on!). So we'll need to convey in some kind of key that wraps all our block data so we can hash it.
+For this example, we’ll go with a custom hash for our block that uses the [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hash function. So we’ll need to convey some kind of key that wraps all our block data so we can hash it.
 
-> ⚠️ SHA-1 is a unsecure cryptographic hash function. Bitcoin uses a double-hashed SHA-256 hash, and you should also consider more robust hashing algorithms, but for the sake of the experiment we'll go with SHA-1.
+> ⚠️ SHA-1 is an insecure cryptographic hash function. Bitcoin uses a double-hashed SHA-256 hash, and **you should consider more robust hashing algorithms** as well. For the sake of the experiment we’ll go with SHA-1, though.
 
 ```swift
 func generateKey() -> String {
@@ -117,7 +117,7 @@ func generateKey() -> String {
 
 Great! Now we have a single argument to feed our SHA-1 function and get our block a hash.
 
-Next, let's design how the Blockchain will look like:
+Next, let’s design how the blockchain will look like:
 
 ```swift
 final class Blockchain {
@@ -146,14 +146,14 @@ final class Blockchain {
 }
 ```
 
-The Blockchain holds the reference for the blocks and takes a block upon initialization (the Genesis Block). Finally, it has the capability to add more blocks to the chain.
+The blockchain holds the reference for the blocks and takes a block upon initialisation (the genesis block). Finally, it has the capability to add more blocks to the chain.
 
 We throw an error if the block was tried to be added to the chain without a hash.
 
-#### Side note
+---
 
-If you take a closer look, you'll also notice that there's no reference whatsoever to the kind of value we are transactioning here (aka the currency). This is true in blockchains in the market as well. Bitcoin, Ether, Ripple… etc are just names given to the value that is being transfered from a wallet to another. There's no _real_ (virtual or material) image of it. It is just a value in the ledger, which by convention is known as the cryptocurrency itself.
+> If you take a closer look, you’ll also notice that there’s no reference whatsoever to the kind of value in a transaction (aka the currency). This is true in blockchains in the market as well. Bitcoin, Ether, Ripple, etc. are just names given to the value that is being transferred from a wallet to another. There’s no _real_ (virtual or material) image of it. It is just a value in the ledger, which by convention is known as the cryptocurrency itself.
 
 ### Next steps
 
-Next we'll explore the mining feature. Follow up for [Part. 2](/building-a-blockchain-in-swift-part2).
+Next we’ll explore the mining feature. Follow up for [Part 2](/building-a-blockchain-in-swift-part2).

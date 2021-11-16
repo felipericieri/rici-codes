@@ -8,25 +8,25 @@ tags:
   - Vapor
 ---
 
-> Exploring the Nonce and playing with the Mining Service.
+> Exploring the nonce and playing with the mining service.
 
 ### Before you dive in
 
-This article is part of the serie "Building a Blockchain in Swift". You can find [here](/building-a-blockchain-in-swift-intro) the Intro and [here](/building-a-blockchain-in-swift-part1) the Part. 1.
+This article is part of the series "Building a Blockchain in Swift". You can find the intro [here](/building-a-blockchain-in-swift-intro) and find the part 1 [here](/building-a-blockchain-in-swift-part1).
 
-### The Nonce
+### The nonce
 
-Now that we have our blockchain settled and we know how the blocks and transactions work, let's take a look in the mining mechanism.
+Now that we have our blockchain settled and we know how the blocks and transactions work, let’s take a look at the mining mechanism.
 
-In our payload, we can't really change a thing. We should keep the block integrity, it should be added to the chain _ipsis literis_. So what can we add to block's structure that can be tweaked for this sake?
+In our payload, we can’t really change a thing. We should maintain the block integrity, so it should be added to the chain verbatim. So what can we add to block's structure that can be tweaked for this sake?
 
-Introducing, the _**nonce**_.
+Introducing the _**nonce**_.
 
-This value is just a random number which main and only purpose is helping us find the "perfect" hash. The way we use it is to incrementing its value.
+This value is just a random number whose only purpose here is helping us find the "perfect" hash. The way we use it is to incrementing its value.
 
 ### Mining
 
-In a live blockchain, this algorithm isn't part of the software. We are just putting it here for the experiment. This is the Node duty (and where all the gold relies), so it uses its own tailor-made solution.
+In a live blockchain, this algorithm isn’t part of the software. We are just putting it here for the experiment. This is the node's duty (and where all the gold relies), so it uses its own tailor-made solution.
 
 ```swift
 final class MiningService {
@@ -74,25 +74,25 @@ final class MiningService {
 }
 ```
 
-_Wow_, hold on! We have too much going on there. Let's break it down:
-1. We create the service defining the blockchain difficulty we'll be working on. This is the amount of zeroes we'll need to find in a hash prefix so it can be accepted by the blockchain;
-2. We set a `mineBlock()` method, that will take the previous block and the transactions that we want to register, then return the fresh new block;
-3. We create a instance of the next block, and then add the transactions to it;
-4. Then we need to generate the hash for this block. This will require some work from the node. Once it's down, we return the block;
+_Wow_, hold on! We have too much going on there. Let’s break it down:
+1. We create the service defining the blockchain difficulty we’ll be working in. This is the amount of zeroes we’ll need to find in a hash prefix so it can be accepted by the blockchain.
+2. We set a `mineBlock()` method that will take the previous block and a set of transactions we want to register and then return the recently minted block.
+3. We create an instance of the next block, and then add the transactions to it.
+4. Then we need to generate the hash for this block. This will require some work from the node. Once it’s done, we return the block.
 5. The way we find the hash for the block is first to execute our SHA-1 function in the block key; and
-6. Loop in to the hash value, incrementing the nonce, until we find a nonce that gives us a hash which is prefixed with the amount of zeroes the blockchain requires.
+6. We loop over the hash value, incrementing the nonce, until we find a value that gives us a hash which is prefixed with the number of zeroes the blockchain requires.
 
-_P.S.: In this implementation I'm using a custom SHA-1 method which you can find it [here](https://gist.github.com/felipericieri/c296fa28198b8671a927ec550a522e53)_
+_P.S.: In this implementation I’m using a custom SHA-1 method which you can find [here](https://gist.github.com/felipericieri/c296fa28198b8671a927ec550a522e53)_
 
 ---
 
-You see, you don't have any guarantee that the `nonce` you're using next is the right one, so there's no other way apart from trial-and-error to find this value.
+You see, you don’t have any guarantee that the `nonce` you're using next is the right one, so there's no other way apart from trial and error, to find this value.
 
-This is a very simple way to implement a Proof-of-Work consensus, but not so efficient. So feel free to explore other ways to implement yours!
+This is a very simple way to implement a proof-of-work consensus, but not so efficient. So feel free to explore other ways to implement yours!
 
-The beauty behind this is that adds entropy to this problem. It's a fair play for all nodes in the network. Whichever finds the hash first, can mine the block.
+The beauty behind this is that it adds entropy to this problem. It’s a fair play for all nodes in the network. Whichever node finds the hash first can mine the block.
 
-### Putting all pieces together
+### Putting all the pieces together
 
 Now we have enough to try to create our own blockchain. This is how we can use it:
 
@@ -124,7 +124,9 @@ If you execute the code above (you can use a Swift Playground for it), you shoul
 E42D0BBF1E810538CBDCE382C040B599A2DDADEE
 D4D96B51564127AE292448F75603F347C5B68947
 7BAC36206D7C747879F765547E7B2A2F35DC5094
+
 ....
+
 5AC1DF0C735FF12CA81623D5BCA5DA56553061B6
 556A5A8BA5B8EC0167B35D782F10A22A1D997661
 D0E0A2882B36B08196A0CC291532D8F213898B78
@@ -133,11 +135,11 @@ D0E0A2882B36B08196A0CC291532D8F213898B78
 Blockchain is ready! 🎉
 ```
 
-> My machine needed to run the function 218 times to find a hash for the genesis block! Picture how many times it would take to find a block with today's difficulty! 😬
+> My machine needed to run the function 218 times to find a hash for the genesis block! Picture how many times it would take to find a block with today’s difficulty! 😬
 
-### Adding Transactions
+### Adding transactions
 
-Now you have a blockchain you can push transactions to! Let's try to transfer some value to people:
+Now you have a blockchain you can push transactions to! Let’s try to transfer some value to people:
 
 ```swift
 // (Assumes the Exercise1.swift preceds)
@@ -163,7 +165,9 @@ C84DA890248ED95DF39E7AD15CACE49EA57BD6A4
 B75FE89D8125D91B6EA7B836F5C1765737741F8E
 8D12099BE01B765E0EA1F2675525EEA216448E94
 E2DD2E47050DFB75C1217216EBB85E1D99A35935
+
 ...
+
 C94DB820D09643D478229EA142EC0B4819503CBD
 48EAA579E1E8BA192D9F2748B30989FCE7F745C8
 43146E96DDBBC7201A1BCC9CA4C5EF588FA0219D
@@ -173,7 +177,7 @@ C94DB820D09643D478229EA142EC0B4819503CBD
 
 > This time the function ran for 116 times!
 
-And that's how your blockchain should look like when printed as a JSON object:
+And that’s how your blockchain should look when printed as a JSON object:
 
 ```json
 {
@@ -204,10 +208,12 @@ And that's how your blockchain should look like when printed as a JSON object:
 
 ### Wrapping up
 
-We've just written our first Blockchain in Swift! 🍾
+We’ve just written our first blockchain in Swift! 🍾
 
-As I've mentioned earlier, we aren't using the most efficient algorithm to find the hash, but that's a great start. That isn't the only protocol out there, though. Most advanced blockchains nowadays use protocols such as **Proof-of-Stake**, **Proof-of-Authority**, **Proof-of-Space**, and many others.
+As I’ve mentioned earlier, we aren’t using the most efficient algorithm to find the hash, but that’s a great start. There's a long discussion about how sustainable the proof-of-work protocol is as well, as it demands too much energy.
 
-Hope you had as much fun as I had writting this. Thanks for reading! If you have any suggestions or questions, please hit me in [twitter](https://twitter.com/ricicodes)!
+That isn’t the only way to achieve consensus, though. Most advanced blockchains nowadays use protocols such as **[proof-of-stake](https://en.wikipedia.org/wiki/Proof_of_stake)** (e.g. Ethereum 2.0 and Cardano), but there are many others, such as **[proof-of-authority](https://coinmarketcap.com/alexandria/glossary/proof-of-authority-poa)**, **[proof-of-capacity](https://www.investopedia.com/terms/p/proof-capacity-cryptocurrency.asp)**, etc.
 
-_Valeu_! ✌️
+Hope you had as much fun as I had writing this. Thanks for reading! If you have any suggestions or questions, please hit me up on [Twitter](https://twitter.com/ricicodes)!
+
+Valeu! ✌️

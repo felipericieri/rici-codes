@@ -4,7 +4,7 @@ date: 2021-10-23
 slug: "/testing-with-closures"
 ---
 
-Can you tell which one below is synchronous and which one is asynchronous?
+Here's a charade: I have two functions. Can you tell which one below is synchronous and which one is asynchronous?
 
 ```swift
 func doThis(_ closure: () -> Void) {
@@ -16,13 +16,19 @@ func doThat(_ closure: @escaping () -> Void) {
 }
 ```
 
-The answer is - there's no way to know by this code.
+That's a silly question, I know. The answer is - there's no way to know by this code. The implementation is hidden. 
 
-Wait, wat?
+But they are slightly different, aren't they? Both accept closures as the argument, but one closure is constrained with the **@escaping** annotation.
 
-An escaping closure does not mean a closure _will_ perform an asynchronous operation. An escaping closure just means that the closure will _escape_ its context, or simply it can not to be consumed within the block. But you still can have synchronous tasks running in it. It all depends of your implementation.
+### Escaping closures
 
-This is evident when you're working with Dependency Injection and you have a default implementation for you app, but mocks for your tests. _**Just because you have a escaping closure, it doesn't mean you need to wait expectations to assert what happens within it**_.
+An escaping closure just means that that block _can escape_ its context, or simply it may not be consumed within the function's body. 
+
+The common use for escaping closures is to perform asynchronous operations. In Swift (before the advance of `async/await`), the way you generally tell the compile to execute a computational intensive task without blocking control is by dispatching it to a background thread and giving it a completion callback for the time it was finished. 
+
+But you still can have synchronous tasks running in it. **It all depends of your implementation**.
+
+This is evident when you're working with Dependency Injection and you have an implementation for you app, but use mocks in your tests. _**Just because you have a escaping closure, it doesn't mean you need to wait expectations to assert what happens within it**_.
 
 ### Example
 
@@ -72,7 +78,7 @@ final class MockApi: Api {
 // Testing it with a asynchronous implementation (bad code, don't do that)
 func test_callEndpoint_runsApiCallEndpoint_async() {
   // Expectation
-  let expects = expectation("Expects callEndpoint(_:) closure to run") // this test NEEDS an expectation, as it runs an asynchronous task
+  let expects = expectation("Expects callEndpoint(_:) closure to run") // this test NEEDS an expectation, as it runs an asynchronous task. BAD PRACTICE WARNING! Don't use me.
   // Given
   let api = DefaultAsyncApi() // using the same object that the app uses
   let apiService = MyAwesomeApiService(api: api)
@@ -99,4 +105,6 @@ func test_callEndpoint_runsApiCallEndpoint_sync() {
 }
 ```
 
-`MyAwesomeApiService` takes an object of type `Api` and consumes it as a dependency, to forward the call we've asked it to perform to the network. The async operation lives in the `DefaultAsyncApi` implementation, but not in `MyAwesomeApiService`. That means, unless demmanded otherwise, `callEndpoint(_:)` will run synchronously.
+`MyAwesomeApiService` takes an object of type `Api` and consumes it as a dependency, to forward the call we've asked it to perform to the network. The asynchronous operation lives in the `DefaultAsyncApi` implementation, but not in `MyAwesomeApiService`. That means, unless demmanded, `callEndpoint(_:)` will run synchronously.
+
+That's it for today. Thanks for stopping by once more. See you next time.

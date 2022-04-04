@@ -13,33 +13,51 @@ One thing I've noticed people don't get right when they start in software develo
 
 Neither did I, back in the day. In fact, I needed to stop for a day to go deep on it so I can have the right picture. It's ironic, such a simple concept yet so hard to grasp.
 
-I'll start with what the docs say:
+I'll share my interpretation with you and - hopefully - it'll be simpler to undertand.
 
 ### Synchronous Operations
+
+According to Wikipedia:
+
 > Synchronization refers to the idea that multiple processes are to join up or handshake at a certain point, in order to reach an agreement or commit to a certain sequence of action.
 
-There was a time where machines are very limitated and could just run one task at time. Nowadays we have rocket power computation in our hands. Your phone is capable to process way more information than it used to have. The Industry is constantly increasing the CPU power in mobile devices over time (as well as adding more cores, better architecture, etc).
+#### Zooming out
 
-But even with all this power, there are tasks that still need to happen in a _synchronised_ fashion. That's where the [Grand Central Dispatch](https://developer.apple.com/documentation/DISPATCH) starts to get complicated. Although you can dispatch tasks to happen at the same time, there will be a point in time they have to convey on the resource access. As in, which thread will touch the data first.
+There was a time where machines are very limited and could just run one task at time. Nowadays we have rocket power computation in our hands. Your phone now is capable to process way more information than ever. The Industry is constantly increasing the CPU power in mobile devices (as well as adding more cores, better architecture, etc).
 
-Coming back to the point, the bottomline is - synchronisation (in this context) is about **one thing happening (or being executed) once at time, after the previous one and before the next one**.
+Even with all this power, there are tasks that still need to happen in a _synchronised_ fashion. Although you can dispatch tasks to happen at the same time, there will be a point in time they have to convey on the resource access. As in, what thread will touch the data first.
 
-The catch is - when a synchronous task is dispatched, it also means this task will be executed **now**, **at the same time the task was dispatched**, and **will wait for the task to be completed to progress to the next task**. (bear this in mind to the next section).
+The bottomline is - synchronisation (in this context) is about **one thing happening (or being executed) at time, after the previous one and before the next one**.
+
+The catch is - when a synchronous task is dispatched, it also means this task will be executed **now**, **at the same time the task was dispatched**, and **will wait for the task to be completed to progress to the next task**, thus **blocking the thread/process control**. (bear this in mind to the next section).
 
 ### Asynchronous Operations
+
+There's a misunderstanding about the opposite of synchronization. People seem to believe that the opposite of doing one thing is doing several, at time.
+
+That's what **Concurrency** means. Asynchronous operations don't necessarily happen at the same time. You can have a serial queue processing tasks asynchronously, for instance.
+
+As per definition:
+
 > \[...\] Asynchronous describes the relationship between two or more events/objects that do interact within the same system _**but do not occur at predetermined intervals**_ and _**do not necessarily rely on each other's existence to function**_. They are not coordinated with each other, meaning they could occur simultaneously or not because they have their own separate agenda.
 
-There's a misleading understanding about the opposite of synchronization. People seem to believe that the opposite of doing one thing is doing several, at time.
+What performing a task asynchronously essentially means is that that task is independent and will not block execution. 
 
-That's what **Concurrent Process** means, in fact. Asynchronous operations don't necessarily happen at the same time. You can have a serial queue processing tasks asynchronously, for instance.
+In other words, the system will compute that you want to perform this task, but it will not wait for it to finish. This way it's thread (and consequentially the other tasks that are about to come) can follow its natural flow.
 
-What performing a task asynchronously essentially means is that this task will be executed _**later**_, as in _**not at the same time it was dispatched**_, and the control will be returned to the system so the next task can be executed. 
+This is a powerful feature for "non-blocking" systems, such as web frameworks (Nodejs, Swift NIO, etc).
 
-In other words, it will compute that you want to perform this task, but it will do later and not block the thread to the other tasks that are about to come.
+_"But wait Rici, if not now, so when does it is executed?"_ you might ask. Well, it'll be executed _**later**_. That means _**not at the same time it was dispatched**_, and the control will be returned to the system so the next task can be executed. 
 
-This is a powerful feature for "non-blocking" systems, such as web frameworks (Nodejs, Swift NIO, etc). Where everything is a "Promise". So nothing is being executed now, but later.
+So when does later occur? Well, you define. It depends to where you're sending your operation to be executed. In iOS, what the system does is to send this taks to the end of the queue. 
 
-So when does later occur? Well, you define. It depends to where you're sending your operation to be executed. In iOS, what the system does is to send this taks to the end of the queue. So if you have 10 tasks to execute in a serial queue and the 5th is asynchronous (dispatched in the same queue), it will be pushed to be executed after the so defined 10th task.
+So let's suppose you have 10 tasks to execute in a serial queue and the 5th is asynchronous (dispatched in the same queue). It will be pushed to be executed after the so defined 10th task.
+
+***
+
+I hope that this help you to have a clear picture. At the end of the day, it doesn't really matter when it will be executed, but if it will block the other operations execution or not. 
+
+Thanks for reading, see you next time.
 
 ### References
 [Synchronization in Computer Science](https://en.wikipedia.org/wiki/Synchronization_(computer_science))

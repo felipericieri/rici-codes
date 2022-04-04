@@ -78,7 +78,7 @@ final class MockApi: Api {
 // Testing it with a asynchronous implementation (bad code, don't do that)
 func test_callEndpoint_runsApiCallEndpoint_async() {
   // Expectation
-  let expects = expectation("Expects callEndpoint(_:) closure to run") // this test NEEDS an expectation, as it runs an asynchronous task
+  let expects = expectation("Expects callEndpoint(_:) closure to run") // this test NEEDS an expectation, as it runs an asynchronous task. BAD PRACTICE WARNING! Don't use me.
   // Given
   let api = DefaultAsyncApi() // using the same object that the app uses
   let apiService = MyAwesomeApiService(api: api)
